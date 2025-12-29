@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Mod Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="font-family:sans-serif;padding:20px">
+  <h2>Minecraft Mod Builder</h2>
+
+  <input id="repo" placeholder="GitHub repo URL" style="width:100%;padding:8px">
+  <br><br>
+
+  <button onclick="build()">Build Mod</button>
+
+  <p id="out"></p>
+
+  <script>
+    async function build() {
+      const repo = document.getElementById("repo").value;
+      const res = await fetch("/build", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repo })
+      });
+      const data = await res.json();
+      document.getElementById("out").innerHTML =
+        `Build started.<br>
+         <a href="${data.actions}" target="_blank">
+           Open GitHub Actions
+         </a>`;
+    }
+  </script>
+</body>
+</html>

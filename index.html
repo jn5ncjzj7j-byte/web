@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ModVersioner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; background:#0f172a; color:white; padding:20px }
+    input, select, button { width:100%; padding:10px; margin-top:10px }
+    button { background:#22c55e; border:none; font-weight:bold }
+    .box { max-width:500px; margin:auto }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>ModVersioner</h1>
+    <p>Update Minecraft mods safely using GitHub Actions.</p>
+
+    <input id="repo" placeholder="GitHub repo link" />
+    
+    <select id="mc">
+      <option value="1.21.11">Minecraft 1.21.11</option>
+      <option value="1.21.10">Minecraft 1.21.10</option>
+    </select>
+
+    <select id="loader">
+      <option value="fabric">Fabric</option>
+      <option value="forge">Forge</option>
+    </select>
+
+    <button onclick="start()">Generate Update</button>
+
+    <p id="out"></p>
+  </div>
+
+<script>
+function start() {
+  const repo = document.getElementById("repo").value;
+  const mc = document.getElementById("mc").value;
+  const loader = document.getElementById("loader").value;
+
+  if (!repo.includes("github.com")) {
+    alert("Please enter a GitHub repo link");
+    return;
+  }
+
+  const clean = repo.replace("https://github.com/", "");
+  const fork = "https://github.com/" + clean + "/fork";
+
+  document.getElementById("out").innerHTML = `
+    <b>Next steps:</b><br><br>
+    1️⃣ <a href="${fork}" target="_blank">Fork the repository</a><br>
+    2️⃣ Update version files to ${mc}<br>
+    3️⃣ Enable GitHub Actions<br>
+    4️⃣ Build ${loader} mod<br><br>
+    <i>This tool does not modify code automatically.</i>
+  `;
+}
+</script>
+</body>
+</html>

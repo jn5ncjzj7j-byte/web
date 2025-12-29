@@ -10,16 +10,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 17
 
-      - name: Build Fabric Mod
-        run: ./gradlew :fabric:build
+      - name: Make Gradle executable
+        run: chmod +x gradlew
+
+      - name: Build Mod
+        run: ./gradlew build
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
-          name: fabric-jar
-          path: fabric/build/libs/*.jar
+          name: mod-jar
+          path: "**/build/libs/*.jar"

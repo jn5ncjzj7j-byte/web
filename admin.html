@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Confirm Payment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
+        .admin-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        input, select { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: 1px solid #ddd; box-sizing: border-box; }
+        .btn-confirm { width: 100%; background: #28a745; color: white; border: none; padding: 15px; border-radius: 6px; margin-top: 20px; cursor: pointer; font-weight: bold; }
+        .info { background: #fffcf0; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffc107; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="admin-card">
+        <h2 style="text-align:center; color:#333;">Admin Manager</h2>
+        
+        <input type="password" id="pass" placeholder="ใส่รหัสผ่าน Admin">
+        <hr style="margin: 20px 0;">
+        
+        <label>เลือกคนที่จะหักยอด:</label>
+        <select id="nameSelect" onchange="showOldBal(this.value)">
+            <option value="">-- กำลังดึงรายชื่อ... --</option>
+        </select>
+
+        <div id="info" class="info" style="display:none;">
+            ยอดค้างปัจจุบัน: <strong id="oldBalText">0</strong> บาท
+        </div>
+
+        <label style="display:block; margin-top:15px;">จำนวนเงินที่เขาโอนมาจริง:</label>
+        <input type="number" id="payAmt" placeholder="เช่น 85">
+
+        <button class="btn-confirm" onclick="confirmPay()">ยืนยันและหักยอดเงิน</button>
+    </div>
+
+    <script>
+        const ADMIN_API = 'https://script.google.com/macros/s/AKfycbwTeagpCAkzDa2olkMkeR6aSEnRhxdjPvYUs8BBP9iQWV_00sdD9fGhPthSE7VJeJS27g/exec';
+        // ใช้ API เดียวกันดึงชื่อ
+        const DATA_API = 'https://script.google.com/macros/s/AKfycbzSNbukKtS8zxIuyaLZFFMC5pdQdTKx7hwCIf6QaV8hkvnvTQpaC-l1RIuNdYF9V-4NGw/exec';
+        
+        let users = [];
+
+        window.onload = async () => {
+            const res = await fetch(DATA_API);
+            users = await res.json();
+            const select = document.getElementById('nameSelect');
+            select.innerHTML = '<option value="">-- เลือกชื่อ --</option>';
+            users.forEach(u => {
+                let opt = document.createElement('option');
+                opt.value = u.name;
+                opt.innerText = u.name;
+                select.appendChild(opt);
+            });
+        };
+
+        function showOldBal(name) {
+            const user = users.find(u => u.name === name);
+            if(user) {
+                document.getElementById('oldBalText').innerText = user.balance;
+                document.getElementById('info').style.display = 'block';
+            }
+        }
+
+        async function confirmPay() {
+            const name = document.getElementById('nameSelect').value;
+            const amt = document.getElementById('payAmt').value;
+            const password = document.getElementById('pass').value;
+
+            if(!name || !amt || !password) return alert("กรุณากรอกข้อมูลให้ครบ");
+
+            if(confirm(`ยืนยันหักยอดเงินของ ${name} จำนวน ${amt} บาท?`)) {
+                const url = `${ADMIN_API}?action=admin_confirm&password=${password}&name=${encodeURIComponent(name)}&pay_amount=${amt}`;
+                const res = await fetch(url);
+                const result = await res.text();
+                
+                if(result === "Success") {
+                    alert("บันทึกสำเร็จ!");
+                    location.reload();
+                } else {
+                    alert("เกิดข้อผิดพลาด: " + result);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

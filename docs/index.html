@@ -1,63 +1,28 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netflix Payment</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Kanit', sans-serif; background: #141414; color: white; display: flex; justify-content: center; padding: 20px; }
-        .card { background: #000; padding: 30px; border-radius: 15px; border: 1px solid #333; width: 100%; max-width: 380px; text-align: center; }
-        h2 { color: #E50914; }
-        select { width: 100%; padding: 12px; border-radius: 8px; background: #222; color: white; border: 1px solid #444; margin-bottom: 20px; }
-        .info-box { background: #1a1a1a; padding: 20px; border-radius: 10px; display: none; text-align: left; border: 1px dashed #444; }
-        .total { font-size: 24px; color: #E50914; font-weight: bold; text-align: center; margin-top: 10px; }
-        .btn-pay { display: block; background: #E50914; color: white; text-decoration: none; padding: 15px; border-radius: 8px; margin-top: 20px; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>NETFLIX PAY</h2>
-        <label>เลือกรายชื่อของคุณ:</label>
-        <select id="nameSelect" onchange="updateInfo(this.value)">
-            <option value="">-- กำลังโหลดรายชื่อ... --</option>
-        </select>
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("ชีต1");
+  var data = sheet.getDataRange().getValues();
 
-        <div id="resultBox" class="info-box">
-            <p>ยอดเดือนนี้: <span id="amt">0</span> บาท</p>
-            <p>ยอดค้างเก่า: <span id="bal">0</span> บาท</p>
-            <hr style="border: 0.5px solid #333;">
-            <div class="total" id="total">0.00 บาท</div>
-            <a href="https://tmn.app.link/Y5OprkLlj0b" class="btn-pay">โอนผ่าน TrueMoney Wallet</a>
-        </div>
-    </div>
-
-    <script>
-        const API = 'https://script.google.com/macros/s/AKfycbzSNbukKtS8zxIuyaLZFFMC5pdQdTKx7hwCIf6QaV8hkvnvTQpaC-l1RIuNdYF9V-4NGw/exec';
-        let users = [];
-
-        window.onload = async () => {
-            const res = await fetch(API);
-            users = await res.json();
-            const select = document.getElementById('nameSelect');
-            select.innerHTML = '<option value="">-- เลือกชื่อของคุณ --</option>';
-            users.forEach(u => {
-                let opt = document.createElement('option');
-                opt.value = u.name;
-                opt.innerText = u.name;
-                select.appendChild(opt);
-            });
+  // กรณีค้นหาชื่อ (Search)
+  if (e.parameter.name) {
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] == e.parameter.name) {
+        var result = {
+          'amount': data[i][1] || 0,
+          'balance': data[i][2] || 0
         };
-
-        function updateInfo(name) {
-            const user = users.find(u => u.name === name);
-            if (user) {
-                document.getElementById('amt').innerText = user.amount;
-                document.getElementById('bal').innerText = user.balance;
-                document.getElementById('total').innerText = (parseFloat(user.amount) + parseFloat(user.balance)).toFixed(2) + " บาท";
-                document.getElementById('resultBox').style.display = 'block';
-            }
-        }
-    </script>
-</body>
-</html>
+        return ContentService.createTextOutput(JSON.stringify(result))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+  } 
+  
+  // กรณีโหลดชื่อทั้งหมด (Dropdown)
+  var names = [];
+  for (var i = 1; i < data.length; i++) {
+    if(data[i][0]) names.push(data[i][0]);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(names))
+    .setMimeType(ContentService.MimeType.JSON);
+}

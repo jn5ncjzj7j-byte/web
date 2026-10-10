@@ -1,120 +1,67 @@
+Bro, on Termux or Linux, you can automatically check the latest Minecraft version using Mojang’s official version manifest. No PC or Box64 needed just to check the version.
 
+There are two ways:
 
-Minecraft Bedrock Server Auto Update Checker
+* One-time check: print the latest release version.
+* Auto-check: check periodically and notify you when a new release comes out.
 
-A simple Bash script that checks the Minecraft Bedrock Dedicated Server (BDS) download page every hour and reports detected version numbers.
+1. Check the latest Minecraft Java version
 
-Designed for Android users running Ubuntu through Termux and PRoot-Distro.
+Run this directly in Termux:
 
-Features
-
-* Checks every hour automatically.
-* Reports detected Minecraft Bedrock version numbers.
-* Runs inside Ubuntu on Termux.
-* No PC required.
-* Uses Bash and curl.
-* Stops when you press Ctrl+C.
-
-Requirements
-
-* Termux
-* Ubuntu installed through PRoot-Distro
-* An internet connection
-* curl, grep, and sort
-
-1. Open Ubuntu
-
-In Termux, run:
-
-proot-distro login ubuntu
-
-2. Install dependencies
-
-Inside Ubuntu, run:
-
-apt update
-apt install -y curl
-
-3. Create the checker script
-
-Run:
-
-nano mc-update-check.sh
-
-Paste the following code:
-
-#!/usr/bin/env bash
-URL="https://www.minecraft.net/en-us/download/server/bedrock"
-while true; do
-    echo "========================================"
-    echo "Checking Minecraft Bedrock updates..."
-    echo "========================================"
-    PAGE=$(curl -fsSL "$URL" 2>/dev/null)
-    if [ -z "$PAGE" ]; then
-        echo "Failed to access the official download page."
-    else
-        VERSION=$(printf '%s' "$PAGE" |
-            grep -oE '26\.[0-9]+(\.[0-9]+)?' |
-            sort -Vu |
-            tail -n 1)
-        if [ -n "$VERSION" ]; then
-            echo "Latest version mentioned: $VERSION"
-        else
-            echo "Could not detect a version number."
-        fi
-    fi
-    echo "Next check in 1 hour."
-    sleep 3600
-done
-
-Save the file using Ctrl+O, press Enter, and exit with Ctrl+X.
-
-4. Run the checker
-
-Make the script executable:
-
-chmod +x mc-update-check.sh
-
-Start checking:
-
-./mc-update-check.sh
+pkg install curl jq -y
+curl -s https://piston-meta.mojang.com/mc/game/version_manifest_v2.json | jq -r '.latest.release'
 
 Example output:
 
-========================================
-Checking Minecraft Bedrock updates...
-========================================
-Latest version mentioned: 26.x
-Next check in 1 hour.
+26.2
 
-The example output is illustrative; the script prints whatever matching version number it detects.
+That is an example only; your command will show the version currently listed by Mojang.
 
-Press Ctrl+C to stop the checker.
+2. Automatically check for new releases
 
-Important limitations
+This script checks every hour and prints a message only when the latest release changes.
 
-This is a basic page-based checker, not a verified latest-version detector. It only searches for version numbers beginning with 26. and selects the highest one found. It may report an outdated or unrelated version, miss future version formats, or fail when Mojang changes its website.
+Create the script:
 
-It does not automatically download or install updates, back up worlds, or restart the server.
+nano mc-version-check.sh
 
-Official download page:
+Paste this code:
 
-https://www.minecraft.net/en-us/download/server/bedrock
+#!/data/data/com.termux/files/usr/bin/bash
+URL="https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+FILE="$HOME/.mc_latest_version"
+while true; do
+    LATEST=$(curl -fsSL "$URL" | jq -r '.latest.release')
+    if [ -n "$LATEST" ] && [ "$LATEST" != "null" ]; then
+        OLD=$(cat "$FILE" 2>/dev/null)
+        if [ "$LATEST" != "$OLD" ]; then
+            echo "Minecraft release: $LATEST"
+            if [ -n "$OLD" ]; then
+                echo "New version detected: $OLD -> $LATEST"
+            fi
+            echo "$LATEST" > "$FILE"
+        else
+            echo "No update. Latest: $LATEST"
+        fi
+    else
+        echo "Failed to check Minecraft version."
+    fi
+    sleep 3600
+done
 
-Running the Bedrock server
+Save in nano with Ctrl+O, Enter, then Ctrl+X.
 
-After extracting the official Linux server package, enter your server directory:
+Run it:
 
-cd serverfolder
+chmod +x mc-version-check.sh
+./mc-version-check.sh
 
-Replace serverfolder with your actual directory name.
+* Checks once per hour.
+* Remembers the last version in ~/.mc_latest_version.
+* Detects when Mojang publishes a newer release.
+* Keeps running until you press Ctrl+C.
 
-On a compatible ARM64 Ubuntu environment with Box64 and the required libraries installed, launch the server with:
+The script checks Minecraft Java Edition’s latest stable release, not snapshots.
 
-box64 ./bedrock_server
-
-Warning: Back up your worlds before updating server files. This checker does not modify your server installation.
-
-Disclaimer
-
-This is an independent community project and is not affiliated with Mojang or Microsoft. Minecraft Bedrock Dedicated Server is their software.
+Note: Termux must remain running for this loop to continue reliably. If you meant Minecraft Bedrock Dedicated Server (BDS) instead of Java Edition, tell me—that uses a different version-checking method.

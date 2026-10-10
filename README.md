@@ -89,6 +89,7 @@ while true; do
     sleep 3600
 done
 
+
 Save with Ctrl+O, press Enter, then Ctrl+X.
 
 ## 4. Run the checker

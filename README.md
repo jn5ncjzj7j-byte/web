@@ -53,9 +53,10 @@ done
 Save in nano with Ctrl+O, Enter, then Ctrl+X.
 
 Run it:
-
+bash```
 chmod +x mc-version-check.sh
 ./mc-version-check.sh
+```
 
 * Checks once per hour.
 * Remembers the last version in ~/.mc_latest_version.

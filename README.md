@@ -46,6 +46,7 @@ nano mc-update-check.sh
 Paste the following code:
 
 bash```
+
 #!/usr/bin/env bash
 URL="https://www.minecraft.net/en-us/download/server/bedrock"
 while true; do
@@ -69,6 +70,7 @@ while true; do
     echo "Next check in 1 hour."
     sleep 3600
 done
+
 ```
 
 Save the file using Ctrl+O, press Enter, and exit with Ctrl+X.
@@ -78,13 +80,17 @@ Save the file using Ctrl+O, press Enter, and exit with Ctrl+X.
 Make the script executable:
 
 bash```
+
 chmod +x mc-update-check.sh
+
 ```
 
 Start checking:
 
 bash```
+
 ./mc-update-check.sh
+
 ```
 
 Example output:

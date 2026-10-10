@@ -1,25 +1,25 @@
 
 # Minecraft Bedrock Server Auto Update Checker
 
-A simple Bash script that checks the Minecraft Bedrock Dedicated Server (BDS) download page every hour.
+A simple Bash script for checking the latest Minecraft Bedrock Dedicated Server (BDS) release from Termux Ubuntu.
 
-Designed for Android users running Ubuntu through Termux and PRoot-Distro.
+Designed for Android users running Ubuntu through PRoot-Distro and Box64.
 
 ## Features
 
-- Automatically checks every hour.
-- Displays detected Minecraft Bedrock version numbers.
-- Runs inside Ubuntu on Termux.
-- No PC required.
-- Uses Bash and curl.
-- Stop anytime with Ctrl+C.
+- Checks for new stable Linux BDS releases.
+- Checks automatically every hour.
+- Remembers the last detected version.
+- Shows when a new version is available.
+- Does not require a PC.
+- Does not modify your existing server files.
 
 ## Requirements
 
 - Termux
-- Ubuntu installed through PRoot-Distro
+- Ubuntu through PRoot-Distro
 - Internet connection
-- curl, grep, and sort
+- curl and jq
 
 ## 1. Open Ubuntu
 
@@ -29,10 +29,10 @@ In Termux, run:
 
 ## 2. Install dependencies
 
-Inside Ubuntu, run:
+Inside Ubuntu:
 
     apt update
-    apt install -y curl
+    apt install -y curl jq
 
 ## 3. Create the checker
 
@@ -40,96 +40,78 @@ Run:
 
     nano mc-update-check.sh
 
-Paste this code:
+Paste the following code:
 
-#!/usr/bin/env bash
+    #!/usr/bin/env bash
 
-URL="https://www.minecraft.net/en-us/download/server/bedrock"
-STATE="$HOME/.mc_bedrock_last_version"
+    set -u
 
-while true; do
-    echo
-    echo "========================================"
-    echo " Minecraft Bedrock Update Checker"
-    echo "========================================"
+    API="https://raw.githubusercontent.com/Bedrock-OSS/BDS-Versions/main/versions.json"
+    STATE="$HOME/.mc_bedrock_last_version"
 
-    PAGE=$(curl -fsSL --max-time 30 \
-        -A "Mozilla/5.0" "$URL" 2>/dev/null)
+    while true; do
+        echo
+        echo "========================================"
+        echo " Minecraft Bedrock Update Checker"
+        echo "========================================"
 
-    if [ -z "$PAGE" ]; then
-        echo "ERROR: Could not download the official page."
-        echo "Check your internet connection and try again."
-    else
-        VERSION=$(printf '%s' "$PAGE" |
-            grep -oE '26\.[0-9]+(\.[0-9]+)?' |
-            sort -Vu |
-            tail -n 1)
+        DATA=$(curl -fsSL --max-time 30 "$API" 2>/dev/null || true)
 
-        if [ -z "$VERSION" ]; then
-            echo "Could not detect a version."
-            echo "The website format may have changed."
+        if [ -z "$DATA" ]; then
+            echo "ERROR: Could not fetch version information."
+            echo "Check your internet connection and try again."
         else
-            OLD=$(cat "$STATE" 2>/dev/null)
+            VERSION=$(printf '%s' "$DATA" | jq -er '.linux.stable' 2>/dev/null || true)
 
-            echo "Detected version: $VERSION"
-
-            if [ -z "$OLD" ]; then
-                echo "$VERSION" > "$STATE"
-                echo "Saved the first detected version."
-            elif [ "$VERSION" != "$OLD" ]; then
-                echo "Version changed: $OLD -> $VERSION"
-                echo "$VERSION" > "$STATE"
+            if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+                echo "ERROR: Could not read the latest stable version."
             else
-                echo "No detected version change."
+                OLD=$(cat "$STATE" 2>/dev/null || true)
+
+                echo "Latest stable Linux BDS: $VERSION"
+
+                if [ -z "$OLD" ]; then
+                    printf '%s\n' "$VERSION" > "$STATE"
+                    echo "Saved the initial version."
+                elif [ "$VERSION" != "$OLD" ]; then
+                    echo "NEW VERSION DETECTED!"
+                    echo "Previous: $OLD"
+                    echo "Latest:   $VERSION"
+                    printf '%s\n' "$VERSION" > "$STATE"
+                else
+                    echo "Your saved version matches the latest check."
+                fi
             fi
         fi
-    fi
 
-    echo "Next check in 1 hour."
-    sleep 3600
-done
+        echo "Next check in 1 hour."
+        sleep 3600
+    done
 
 Save with Ctrl+O, press Enter, then Ctrl+X.
 
 ## 4. Run the checker
 
-Make it executable:
-
     chmod +x mc-update-check.sh
-
-Start it:
-
     ./mc-update-check.sh
 
-The script checks the page and waits one hour before checking again.
+The script checks every hour. Press Ctrl+C to stop it.
 
-Press Ctrl+C to stop it.
-
-## Official Download Page
+## Official BDS Downloads
 
 https://www.minecraft.net/en-us/download/server/bedrock
 
-## Running Bedrock Dedicated Server
+## Version Information Source
 
-After extracting the official Linux server package, enter your server directory:
+https://github.com/Bedrock-OSS/BDS-Versions
 
-    cd serverfolder
+## Important
 
-Replace serverfolder with your actual directory name.
+This script checks the latest stable Linux BDS version recorded by the community version archive. The archive may occasionally lag behind Mojang's release.
 
-Launch it on a compatible ARM64 environment with Box64 and the required libraries:
+This is an update checker only. It does not download or install updates, back up worlds, or restart the server.
 
-    box64 ./bedrock_server
-
-## Limitations
-
-- This script searches the download page for version numbers beginning with 26.
-- The detected version is not guaranteed to be the latest downloadable Linux BDS release.
-- Mojang may change the website format.
-- This is a checker, not a full automatic updater.
-- It does not download updates, back up worlds, replace server files, or restart the server.
-
-Always back up your worlds before updating.
+Always back up your worlds before updating server files.
 
 ## Disclaimer
 

@@ -41,7 +41,7 @@ Run:
     nano mc-update-check.sh
 
 Paste this code:
-    
+
 #!/usr/bin/env bash
 
 URL="https://www.minecraft.net/en-us/download/server/bedrock"
@@ -88,7 +88,6 @@ while true; do
     echo "Next check in 1 hour."
     sleep 3600
 done
-
 
 Save with Ctrl+O, press Enter, then Ctrl+X.
 

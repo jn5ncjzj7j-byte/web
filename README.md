@@ -57,7 +57,6 @@ bash```
 chmod +x mc-version-check.sh
 ./mc-version-check.sh
 ```
-
 * Checks once per hour.
 * Remembers the last version in ~/.mc_latest_version.
 * Detects when Mojang publishes a newer release.

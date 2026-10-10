@@ -1,3 +1,5 @@
+
+
 Minecraft Bedrock Server Auto Update Checker
 
 A simple Bash script that checks the Minecraft Bedrock Dedicated Server (BDS) download page every hour and reports detected version numbers.
@@ -30,22 +32,16 @@ proot-distro login ubuntu
 
 Inside Ubuntu, run:
 
-bash```
 apt update
 apt install -y curl
-```
 
 3. Create the checker script
 
 Run:
 
-bash```
 nano mc-update-check.sh
-```
 
 Paste the following code:
-
-bash```
 
 #!/usr/bin/env bash
 URL="https://www.minecraft.net/en-us/download/server/bedrock"
@@ -71,27 +67,17 @@ while true; do
     sleep 3600
 done
 
-```
-
 Save the file using Ctrl+O, press Enter, and exit with Ctrl+X.
 
 4. Run the checker
 
 Make the script executable:
 
-bash```
-
 chmod +x mc-update-check.sh
-
-```
 
 Start checking:
 
-bash```
-
 ./mc-update-check.sh
-
-```
 
 Example output:
 
@@ -125,10 +111,7 @@ Replace serverfolder with your actual directory name.
 
 On a compatible ARM64 Ubuntu environment with Box64 and the required libraries installed, launch the server with:
 
-bash```
 box64 ./bedrock_server
-```
-
 
 Warning: Back up your worlds before updating server files. This checker does not modify your server installation.
 

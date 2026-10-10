@@ -41,36 +41,53 @@ Run:
     nano mc-update-check.sh
 
 Paste this code:
+    
+#!/usr/bin/env bash
 
-    #!/usr/bin/env bash
+URL="https://www.minecraft.net/en-us/download/server/bedrock"
+STATE="$HOME/.mc_bedrock_last_version"
 
-    URL="https://www.minecraft.net/en-us/download/server/bedrock"
+while true; do
+    echo
+    echo "========================================"
+    echo " Minecraft Bedrock Update Checker"
+    echo "========================================"
 
-    while true; do
-        echo "========================================"
-        echo "Checking Minecraft Bedrock updates..."
-        echo "========================================"
+    PAGE=$(curl -fsSL --max-time 30 \
+        -A "Mozilla/5.0" "$URL" 2>/dev/null)
 
-        PAGE=$(curl -fsSL "$URL" 2>/dev/null)
+    if [ -z "$PAGE" ]; then
+        echo "ERROR: Could not download the official page."
+        echo "Check your internet connection and try again."
+    else
+        VERSION=$(printf '%s' "$PAGE" |
+            grep -oE '26\.[0-9]+(\.[0-9]+)?' |
+            sort -Vu |
+            tail -n 1)
 
-        if [ -z "$PAGE" ]; then
-            echo "Failed to access the official download page."
+        if [ -z "$VERSION" ]; then
+            echo "Could not detect a version."
+            echo "The website format may have changed."
         else
-            VERSION=$(printf '%s' "$PAGE" |
-                grep -oE '26\.[0-9]+(\.[0-9]+)?' |
-                sort -Vu |
-                tail -n 1)
+            OLD=$(cat "$STATE" 2>/dev/null)
 
-            if [ -n "$VERSION" ]; then
-                echo "Latest version mentioned: $VERSION"
+            echo "Detected version: $VERSION"
+
+            if [ -z "$OLD" ]; then
+                echo "$VERSION" > "$STATE"
+                echo "Saved the first detected version."
+            elif [ "$VERSION" != "$OLD" ]; then
+                echo "Version changed: $OLD -> $VERSION"
+                echo "$VERSION" > "$STATE"
             else
-                echo "Could not detect a version number."
+                echo "No detected version change."
             fi
         fi
+    fi
 
-        echo "Next check in 1 hour."
-        sleep 3600
-    done
+    echo "Next check in 1 hour."
+    sleep 3600
+done
 
 Save with Ctrl+O, press Enter, then Ctrl+X.
 
